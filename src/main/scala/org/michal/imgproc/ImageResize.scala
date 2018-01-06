@@ -13,14 +13,16 @@ import org.michal.schema.ByteArrSchema
 
 object ImageResize {
 
-  class StringCountAggregate extends AggregateFunction[String, Int, String] {
-    override def add(value: String, accumulator: Int): Int = accumulator + 1
+  class StringCountAggregate extends AggregateFunction[String, (String, Int), String] {
+    override def add(value: String, accumulator: (String, Int)): (String, Int) =
+      value -> (accumulator._2 + 1)
 
-    override def createAccumulator(): Int = 0
+    override def createAccumulator(): (String, Int) = "" -> 0
 
-    override def getResult(accumulator: Int): String = accumulator.toString
+    override def getResult(accumulator: (String, Int)): String =
+      s"Path ${accumulator._1} processed ${accumulator._2} times last 10 sec..."
 
-    override def merge(a: Int, b: Int): Int = a + b
+    override def merge(a: (String, Int), b: (String, Int)): (String, Int) = a._1 -> (a._2 + b._2)
   }
 
   def main(args: Array[String]) {
