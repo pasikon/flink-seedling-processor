@@ -19,6 +19,9 @@ val flinkDependencies = Seq(
   "org.apache.flink" %% "flink-connector-kafka-0.11" % flinkVersion % "provided"
 )
 
+// https://mvnrepository.com/artifact/org.tensorflow/tensorflow
+libraryDependencies += "org.tensorflow" % "tensorflow" % "1.4.0"
+
 lazy val root = (project in file(".")).
   settings(
     libraryDependencies ++= flinkDependencies
