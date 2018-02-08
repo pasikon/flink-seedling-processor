@@ -11,7 +11,7 @@ class PicStreamOperator extends AbstractStreamOperator[Array[Byte]] with OneInpu
     val path = element.getValue
     val matSrc = opencv_imgcodecs.imread(path)
     val matDst = new Mat()
-    opencv_imgproc.resize(matSrc, matDst, new Size(150, 150))
+    opencv_imgproc.resize(matSrc, matDst, new Size(300, 300))
 
     val darr: Array[Byte] = new Array[Byte]((matDst.total() * matDst.channels()).toInt)
     matDst.data().get(darr)
