@@ -11,23 +11,29 @@ organization := "org.michal"
 
 scalaVersion in ThisBuild := "2.11.7"
 
-val flinkVersion = "1.4.0"
+val flinkVersion = "1.4.2"
 
 val flinkDependencies = Seq(
   "org.apache.flink" %% "flink-scala" % flinkVersion % "provided",
   "org.apache.flink" %% "flink-streaming-scala" % flinkVersion % "provided",
-  "org.apache.flink" %% "flink-connector-kafka-0.11" % flinkVersion % "provided"
+  "org.apache.flink" %% "flink-hadoop-compatibility" % flinkVersion % "provided",
+  "org.apache.flink" %% "flink-connector-kafka-0.11" % flinkVersion,
+  "org.apache.logging.log4j" % "log4j" % "2.11.0",
+  "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
+  "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.0",
+  "org.apache.kafka" % "kafka-clients" % "0.11.0.2"
 )
 
 // https://mvnrepository.com/artifact/org.tensorflow/tensorflow
 libraryDependencies += "org.tensorflow" % "tensorflow" % "1.4.0"
+libraryDependencies += "org.bytedeco" % "javacv-platform" % "1.4.1"
 
 lazy val root = (project in file(".")).
   settings(
     libraryDependencies ++= flinkDependencies
   )
 
-mainClass in assembly := Some("org.michal.Job")
+mainClass in assembly := Some("org.michal.imgproc.ImageClassifyProcessor")
 
 // make run command include the provided dependencies
 run in Compile := Defaults.runTask(fullClasspath in Compile,

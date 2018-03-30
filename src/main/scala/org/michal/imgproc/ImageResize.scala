@@ -7,33 +7,26 @@ import java.util.Properties
 import org.apache.flink.api.common.functions.{AggregateFunction, RichMapFunction}
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
-import org.apache.flink.configuration.Configuration
+import org.apache.flink.runtime.fs.hdfs.{HadoopDataInputStream, HadoopFileSystem}
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.co.CoProcessFunction
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.windowing.assigners.{SlidingEventTimeWindows, SlidingProcessingTimeWindows}
 import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer010, FlinkKafkaProducer010}
+import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer010, FlinkKafkaConsumer011, FlinkKafkaProducer010, FlinkKafkaProducer011}
 import org.apache.flink.util.Collector
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.FileSystem
 import org.michal.imgproc.operator.PicStreamOperator
 import org.michal.schema.ByteArrSchema
 import org.michal.tfserving.SeedlingsModelServing.readGraph
 import org.tensorflow.{Graph, Session, Tensor}
+import java.net.URI
 
-case class TFModel(name: String, model: Array[Byte])
-case class SeedlingPicture(bytes: Array[Byte])
-
-object SeedlingPicture {
-  /**
-    * Normalizes input picture
-    * @param arg
-    * @return
-    */
-  def apply(arg: Array[Byte], normFac: Int): SeedlingPicture = new SeedlingPicture(
-    arg.map(b => b.toFloat / normFac).flatMap(ByteBuffer.allocate(4).putFloat(_).array())
-  )
-}
+import org.apache.flink.core.fs
+import org.apache.flink.shaded.guava18.com.google.common.io.ByteStreams
+import org.michal.imgproc.model.{SeedlingPicture, TFModel}
 
 
 //class ImageSeedlingClassifyFunction extends RichMapFunction[Array[Byte], List[Float]] {
@@ -53,12 +46,6 @@ class ImageClassifyProcessor extends CoProcessFunction[TFModel, SeedlingPicture,
   with CheckpointedFunction {
 
   var currentModel : Graph = _
-//  var newModel : Option[TFModel] = None
-
-
-  override def open(parameters: Configuration): Unit = {
-//    val modelDesc = new ValueStateDescriptor[]()
-  }
 
   override def processElement1(mo: TFModel, ctx: CoProcessFunction[TFModel, SeedlingPicture, List[Float]]#Context, out: Collector[List[Float]]): Unit = {
     println("Updating model...")
@@ -87,11 +74,10 @@ class ImageClassifyProcessor extends CoProcessFunction[TFModel, SeedlingPicture,
   }
 
   override def initializeState(context: FunctionInitializationContext): Unit = {
-    val path = "C:\\Users\\michal\\IdeaProjects\\flink-seedling-processor\\src\\main\\resources\\data\\frozen_SeedlingsRecognize.pb"
+    val path = "data/frozen_SeedlingsRecognize.pb"
     println(s"Loading saved model from $path")
     val lg: Graph = readGraph(Paths.get (path))
     currentModel = lg
-//    val ls: Session = new Session (currentModel)
     println("Model Loading complete")
   }
 
@@ -125,15 +111,14 @@ object ImageResize {
 
   def main(args: Array[String]) {
 
-
     val env = StreamExecutionEnvironment.getExecutionEnvironment
 
     val properties = new Properties()
-    properties.setProperty("bootstrap.servers", "localhost:9092")
+    properties.setProperty("bootstrap.servers", "kafka:9092")
     properties.setProperty("group.id", "test")
 
-    val imagePathsConsumer = new FlinkKafkaConsumer010[String]("image_paths", new SimpleStringSchema(), properties)
-    val modelConsumer = new FlinkKafkaConsumer010[Array[Byte]]("tfmodels", new ByteArrSchema, properties)
+    val imagePathsConsumer = new FlinkKafkaConsumer011[String]("image_paths", new SimpleStringSchema(), properties)
+    val modelConsumer = new FlinkKafkaConsumer011[Array[Byte]]("tfmodels", new ByteArrSchema, properties)
 
     imagePathsConsumer.setStartFromLatest()
     modelConsumer.setStartFromLatest()
@@ -152,13 +137,9 @@ object ImageResize {
     val filePathCntStr: DataStream[String] = filePaths.keyBy(s => s).
       window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(5))).
       aggregate(new StringCountAggregate)
-//    (path => {
-//      println(path)
-//      s"Picture processed $path"
-//      })
 
-    picLoadResizeStream.addSink(new FlinkKafkaProducer010[Array[Byte]]("localhost:9092", "images_resized", new ByteArrSchema()))
-    filePathCntStr.addSink(new FlinkKafkaProducer010[String]("localhost:9092", "notification", new SimpleStringSchema()))
+    picLoadResizeStream.addSink(new FlinkKafkaProducer011[Array[Byte]]("kafka:9092", "images_resized", new ByteArrSchema()))
+    filePathCntStr.addSink(new FlinkKafkaProducer011[String]("kafka:9092", "notification", new SimpleStringSchema()))
 
     env.execute()
   }

@@ -44,9 +44,9 @@ class SeedlingsModelServing(path: String) {
 object SeedlingsModelServing {
 
   def main(args: Array[String]): Unit = {
-    val model_path = "C:\\Users\\michal\\IdeaProjects\\flink-seedling-processor\\src\\main\\resources\\data\\frozen_SeedlingsRecognize.pb" // model
+    val model_path = "data/frozen_SeedlingsRecognize.pb" // model
 
-    val matSrc = opencv_imgcodecs.imread("C:\\Users\\michal\\IdeaProjects\\flink-seedling-processor\\src\\main\\resources\\data\\0b1df6f5a.png")
+    val matSrc = opencv_imgcodecs.imread("data/0b1df6f5a.png")
     val matDst = new Mat()
     opencv_imgproc.resize(matSrc, matDst, new Size(300, 300))
 
