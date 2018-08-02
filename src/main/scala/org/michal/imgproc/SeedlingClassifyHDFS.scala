@@ -7,6 +7,7 @@ import java.util.Properties
 import org.apache.flink.api.common.functions.MapFunction
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.core.fs
+import org.apache.flink.core.fs.FileStatus
 import org.apache.flink.runtime.fs.hdfs.{HadoopDataInputStream, HadoopFileSystem}
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
 import org.apache.flink.shaded.guava18.com.google.common.io.ByteStreams
@@ -21,10 +22,17 @@ import org.michal.imgproc.hdfsutils.HdfsUtils
 import org.michal.imgproc.model.{SeedlingPicture, TFModel}
 import org.michal.schema.ByteArrSchema
 import org.tensorflow.{Graph, Session, Tensor}
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
+
+import scala.util.Try
 
 
 class ImageClassifyProcessorHDFS extends CoProcessFunction[TFModel, SeedlingPicture, List[Float]]
   with CheckpointedFunction {
+
+
+  val log: Logger = LoggerFactory.getLogger(classOf[ImageClassifyProcessorHDFS])
 
   var currentModel : Graph = _
   //  var newModel : Option[TFModel] = None
@@ -87,15 +95,21 @@ class ImageClassifyProcessorHDFS extends CoProcessFunction[TFModel, SeedlingPict
 }
 
 class ReadImgByteArrayHDFSFunction extends MapFunction[String, Array[Byte]] {
+  val log: Logger = LoggerFactory.getLogger(classOf[ReadImgByteArrayHDFSFunction])
+
   override def map(filename: String): Array[Byte] = {
     val fhdfs = HdfsUtils.getFlinkHadoopFileSystem
 
-    val hadoopDataInputStream = fhdfs.open(new fs.Path("seedling_pics/", filename))
+    val hadoopDataInputStream = Try(fhdfs.open(new fs.Path("seedling_pics/", filename)))
+      .getOrElse{
+        log.error("Image not found falling back to default image!")
+        fhdfs.open(new fs.Path("seedling_pics/", "0911d3dee.png"))
+      }
     //      val img: BufferedImage = ImageIO.read(hadoopDataInputStream.getHadoopInputStream.getWrappedStream)
 
     import org.bytedeco.javacpp.opencv_core.Mat
     val bytes: Array[Byte] = ByteStreams.toByteArray(hadoopDataInputStream.getHadoopInputStream.getWrappedStream)
-    println(s"Read ${bytes.length} bytes for $filename from HDFS...")
+    log.info(s"Read ${bytes.length} bytes for $filename from HDFS...")
     val mat = new Mat(new BytePointer(ByteBuffer.wrap(bytes)))
     val matSrc = opencv_imgcodecs.imdecode(mat, opencv_imgcodecs.CV_LOAD_IMAGE_UNCHANGED)
 
@@ -110,6 +124,9 @@ class ReadImgByteArrayHDFSFunction extends MapFunction[String, Array[Byte]] {
 
 
 object SeedlingClassifyHDFS {
+
+  val seedlingArr: Array[String] = "Black-grass\nCharlock\nCleavers\nCommon Chickweed\nCommon wheat\nFat Hen\nLoose Silky-bent\nMaize\nScentless Mayweed\nShepherds Purse\nSmall-flowered Cranesbill\nSugar beet"
+    .split("\n")
 
   def main(args: Array[String]) {
 
@@ -136,7 +153,7 @@ object SeedlingClassifyHDFS {
     val classificationSoftmaxMaxArgIdx: DataStream[String] = models.
       connect(hdfsPicResizedNormalized).
       process(new ImageClassifyProcessorHDFS).
-      map(softmax => softmax.indexOf(softmax.max).toString)
+      map(softmax => seedlingArr(softmax.indexOf(softmax.max)))
 
     classificationSoftmaxMaxArgIdx.addSink(
       new FlinkKafkaProducer011[String]("kafka:9092", "img_class_softmax", new SimpleStringSchema())
