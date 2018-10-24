@@ -1,4 +1,4 @@
-package org.michal.imgproc.operator
+package org.tensorpol.ai_seedling_rec.examples.operator
 
 import org.apache.flink.streaming.api.operators.{AbstractStreamOperator, OneInputStreamOperator}
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord

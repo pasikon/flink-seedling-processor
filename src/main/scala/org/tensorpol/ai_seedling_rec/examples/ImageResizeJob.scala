@@ -1,32 +1,23 @@
-package org.michal.imgproc
+package org.tensorpol.ai_seedling_rec.examples
 
-import java.nio.{ByteBuffer, FloatBuffer}
 import java.nio.file.{Files, Path, Paths}
+import java.nio.{ByteBuffer, FloatBuffer}
 import java.util.Properties
 
-import org.apache.flink.api.common.functions.{AggregateFunction, RichMapFunction}
+import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
-import org.apache.flink.runtime.fs.hdfs.{HadoopDataInputStream, HadoopFileSystem}
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.co.CoProcessFunction
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.windowing.assigners.{SlidingEventTimeWindows, SlidingProcessingTimeWindows}
+import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer010, FlinkKafkaConsumer011, FlinkKafkaProducer010, FlinkKafkaProducer011}
+import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import org.apache.flink.util.Collector
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.FileSystem
-import org.michal.imgproc.operator.PicStreamOperator
-import org.michal.schema.ByteArrSchema
-import org.michal.tfserving.SeedlingsModelServing.readGraph
 import org.tensorflow.{Graph, Session, Tensor}
-import java.net.URI
-
-import org.apache.flink.core.fs
-import org.apache.flink.shaded.guava18.com.google.common.io.ByteStreams
-import org.michal.imgproc.model.{SeedlingPicture, TFModel}
+import org.tensorpol.ai_seedling_rec.examples.operator.PicStreamOperator
+import org.tensorpol.ai_seedling_rec.imageprocessing.{SeedlingPicture, TFModel}
+import org.tensorpol.ai_seedling_rec.serialization.ByteArrSchema
 
 
 //class ImageSeedlingClassifyFunction extends RichMapFunction[Array[Byte], List[Float]] {

@@ -1,11 +1,11 @@
-package org.michal
+package org.tensorpol.ai_seedling_rec.examples
 
 import java.util.Properties
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
+import org.apache.flink.streaming.api.scala._
 
 object FromKafkaToKafka {
 

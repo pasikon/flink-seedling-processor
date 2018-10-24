@@ -7,7 +7,7 @@ name := "flink-seedling-processor"
 
 version := "0.1-SNAPSHOT"
 
-organization := "org.michal"
+organization := "org.tensorpol"
 
 scalaVersion in ThisBuild := "2.11.7"
 
@@ -33,7 +33,7 @@ lazy val root = (project in file(".")).
     libraryDependencies ++= flinkDependencies
   )
 
-mainClass in assembly := Some("org.michal.imgproc.ImageClassifyProcessor")
+mainClass in assembly := Some("org.tensorpol.imgproc.ImageClassifyProcessor")
 
 // make run command include the provided dependencies
 run in Compile := Defaults.runTask(fullClasspath in Compile,

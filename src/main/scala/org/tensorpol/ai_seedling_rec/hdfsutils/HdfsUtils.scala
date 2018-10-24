@@ -1,4 +1,4 @@
-package org.michal.imgproc.hdfsutils
+package org.tensorpol.ai_seedling_rec.hdfsutils
 
 import java.net.URI
 

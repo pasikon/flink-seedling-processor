@@ -1,4 +1,4 @@
-package org.michal.schema
+package org.tensorpol.ai_seedling_rec.serialization
 
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor

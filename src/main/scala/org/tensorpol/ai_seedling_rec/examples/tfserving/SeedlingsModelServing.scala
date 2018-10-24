@@ -1,4 +1,4 @@
-package org.michal.tfserving
+package org.tensorpol.ai_seedling_rec.examples.tfserving
 
 import java.nio.{ByteBuffer, FloatBuffer}
 import java.nio.file.{Files, Path, Paths}
