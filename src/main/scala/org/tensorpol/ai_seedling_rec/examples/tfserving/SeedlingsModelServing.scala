@@ -21,7 +21,7 @@ class SeedlingsModelServing(path: String) {
   def scorePic(record: Array[Byte]) = {
     val input = Tensor.create(Array(1l,300L, 300L, 3L), ByteBuffer.wrap(record).asFloatBuffer())
     val learningPhase = Tensor.create(false)
-    println(s"Input shape: ${input.shape().toString}")
+    println("Input tensor shape: " + input.shape.toList.foldLeft("")((a, b) => a + s" $b"))
     val value: Tensor[_] = ls.runner.feed("input_1", input)
       .feed("keras_learning_phase", learningPhase)
       .fetch("dense_1/Softmax")

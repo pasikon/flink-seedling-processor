@@ -24,7 +24,7 @@ object TensorFlowGraphProvider {
 
   def fromLocalFilesystem(): Graph = {
     //TODO: externalize model location
-    val path = "data/frozen_SeedlingsRecognize.pb" // model
+    val path = "tf_model/frozen_SeedlingsRecognize.pb" // model
     println(s"Loading saved model from $path")
     readGraph(Paths.get (path))
   }

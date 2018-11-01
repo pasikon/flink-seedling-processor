@@ -48,7 +48,7 @@ class ImageClassifyProcessor extends CoProcessFunction[TFModel, SeedlingPicture,
 
     val input = Tensor.create(Array(1l,300L, 300L, 3L), ByteBuffer.wrap(pic.bytes).asFloatBuffer())
     val learningPhase = Tensor.create(false)
-    println(s"Input shape: ${input.shape().toString}")
+    println("Input tensor shape: " + input.shape.toList.foldLeft("")((a, b) => a + s" $b"))
     val result: Tensor[_] = sess.runner.feed("input_1", input)
       .feed("keras_learning_phase", learningPhase)
       .fetch("dense_1/Softmax")

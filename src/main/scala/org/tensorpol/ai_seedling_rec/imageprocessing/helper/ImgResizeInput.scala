@@ -1,3 +1,6 @@
 package org.tensorpol.ai_seedling_rec.imageprocessing.helper
 
-case class ImgResizeInput(xTarget: Int, yTarget: Int, image: Array[Byte])
+import com.tensorpol.common.domain.Msg
+import com.tensorpol.seedlingsinterface.domain.SeedlingClassifyRequest
+
+case class ImgResizeInput(xTarget: Int, yTarget: Int, imageReq: Msg[SeedlingClassifyRequest])
